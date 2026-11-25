@@ -7,7 +7,17 @@ var _joyId=null,_joyCx=0,_joyCy=0,_aimId=null;
    разбудить его при первом касании */
 function ensureAudio(){
   if(!SFX.ctx){try{sfxInit();}catch(e){}}
-  if(SFX.ctx&&SFX.ctx.state==='suspended'){try{SFX.ctx.resume();}catch(e){}}
+  if(!SFX.ctx){
+    if(!TOUCH._awarn){TOUCH._awarn=true;log('Браузер не даёт звук: проверьте громкость и запрет autoplay.','a06a5a');}
+    return;
+  }
+  if(SFX.ctx.state==='suspended'){
+    try{
+      SFX.ctx.resume().then(()=>{
+        if(!TOUCH._resumed){TOUCH._resumed=true;log('Звук проснулся: лес заговорил.','8aa06b');}
+      });
+    }catch(e){}
+  }
 }
 
 function touchSupported(){

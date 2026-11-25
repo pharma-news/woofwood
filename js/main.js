@@ -1,6 +1,6 @@
 'use strict';
 /* ============ главный цикл, ввод, пиксельный рендер ============ */
-var G=null,cv,ctx,DPR=1,ZB=4,bcv=null,bctx=null,dark=null,dctx=null,vign=null,grainCv=null,grainPat=null,crtCv=null,crtPat=null,_last=0;
+var G=null,cv,ctx,DPR=1,ZB=4,bcv=null,bctx=null,dark=null,dctx=null,vign=null,grainCv=null,grainPat=null,crtCv=null,crtPat=null,_last=0,_afTick=0;
 
 function boot(){
   cv=$('cv');ctx=cv.getContext('2d');
@@ -53,7 +53,8 @@ function resize(){
 }
 
 function startGame(fromSave){
-  sfxInit();
+  try{sfxInit();}catch(e){log('Звук не запустился: '+e.message,'a06a5a');}
+  if(typeof ensureAudio==='function')ensureAudio();
   const data=(fromSave&&fromSave.v===SAVE_V)?fromSave:null;
   buildWorld(data?data.seed:undefined);
   G={state:'play',paused:false,day:1,hours:DAY_START,cam:{x:0,y:0},
@@ -274,6 +275,7 @@ function toggleFlash(){
 function frame(ts){
   const dt=Math.min(.05,((ts-_last)/1000)||0);_last=ts;
   if(typeof syncTouchUI==='function')syncTouchUI();
+  if(++_afTick%90===0&&typeof ensureAudio==='function')ensureAudio();
   if(G){
     if(G.state==='play'&&!G.paused)update(dt);
     else if(G.state==='play'&&G.ui&&G.ui.panel===UI.el.lootP)tickSearch(dt);
