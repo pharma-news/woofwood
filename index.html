@@ -151,6 +151,14 @@
   #tbFire:active,#tbFire.down{background:#2b3423;border-color:#96a878}
   #tbSide{position:absolute;right:14px;bottom:118px;display:flex;flex-direction:column;gap:6px}
   #tbTop{position:absolute;left:50%;top:14px;transform:translateX(-50%);display:flex;gap:6px}
+  #tbWeapons{position:absolute;left:50%;bottom:172px;transform:translateX(-50%);display:flex;gap:6px}
+  body.touchui #hotbar{display:none}
+  .tb.w{width:46px;height:46px;min-width:46px;padding:4px 6px;position:relative}
+  .tb.w canvas{width:26px;height:26px;display:block;margin:1px auto 0}
+  .tb.w .wn{position:absolute;left:4px;top:2px;font-size:9px;color:#6f765c}
+  .tb.w .wa{position:absolute;right:4px;bottom:2px;font-size:9px;color:#cfcbb8}
+  .tb.w.sel{border-color:#96a878;box-shadow:0 0 8px rgba(150,168,120,.3)}
+  .tb.w.off{opacity:.45}
   .tb{pointer-events:auto;background:rgba(13,16,11,.85);border:1px solid #3b4136;color:#b6b29f;
     font-family:inherit;font-size:11px;letter-spacing:1px;padding:8px 10px;min-width:46px;cursor:pointer}
   .tb:active,.tb.down{background:#242b1c;border-color:#7d8a63;color:#d6d0bd}
@@ -169,7 +177,7 @@
     .full .ctrl{font-size:11px;line-height:1.6;max-width:92vw}
     .bar{width:120px}
     #mm{width:110px;height:84px}
-    #log{max-width:56vw;font-size:11px;bottom:170px}
+    #log{max-width:44vw;font-size:11px;bottom:auto;top:80px;left:14px}
     #hotbar{bottom:172px}
     #hint{bottom:64px}
     .hs{width:44px;height:44px}
@@ -177,6 +185,7 @@
     #joy{width:128px;height:128px}
     #tbFire{width:82px;height:82px}
     #tbTop{left:146px;transform:none}
+    #tbWeapons{bottom:172px}
     #closeBtn,#closeBtn2,#closeBtn3,#closeBtn4,#closeBtn5,#closeBtn6{min-height:34px;padding:6px 12px}
     .rec button{min-height:32px}
   }
@@ -185,6 +194,7 @@
     #joy{width:112px;height:112px}
     #tbSide{flex-direction:row;right:110px;bottom:14px}
     #tbSide .tb{min-width:40px;padding:7px 8px;font-size:10px}
+    #tbWeapons{left:14px;bottom:132px;transform:none}
     #log{bottom:auto;top:82px;left:14px;max-width:44vw}
   }
 </style>
@@ -280,12 +290,18 @@
     <button class="tb" id="tbE">ОБЫск</button>
     <button class="tb" id="tbH">ХИЛ</button>
     <button class="tb" id="tbF">ФОНАРЬ</button>
-    <button class="tb" id="tbC">ТИХО</button>
+    <button class="tb" id="tbC">ИДТИ</button>
     <button class="tb" id="tbR">ЗАРЯД</button>
+  </div>
+  <div id="tbWeapons">
+    <button class="tb w" id="tbW1"><span class="wn">1</span></button>
+    <button class="tb w" id="tbW2"><span class="wn">2</span></button>
+    <button class="tb w" id="tbW3"><span class="wn">3</span></button>
   </div>
   <div id="tbTop">
     <button class="tb" id="tbBag">РЮКЗак</button>
     <button class="tb" id="tbMenu">МЕНЮ</button>
+    <button class="tb" id="tbSnd">ЗВУК</button>
   </div>
   <div id="aimMark" class="hidden"></div>
 </div>
@@ -301,9 +317,10 @@
     <b>1-3</b> — оружие &nbsp; <b>M</b> — музыка/звук. Голод, жажда, темнота. Днём — хлам и консервы. Ночью — патрули кордона.
   </div>
   <div class="ctrl mob" id="ctrlMob" hidden>
-    <b>Джойстик слева</b> — идти (до упора — бег) &nbsp; <b>Тап по экрану</b> — прицел и атака<br>
-    <b>АТАКА справа</b> — держать и бить &nbsp; <b>ОБЫск</b> — держать у ящика &nbsp; <b>ХИЛ · ФОНАРЬ · ТИХО · ЗАРЯД</b><br>
-    <b>РЮКЗак / МЕНЮ</b> — сверху. Оружие меняется нажатием на ячейки внизу.
+    <b>Джойстик слева</b> — идти &nbsp; <b>Тап по экрану</b> — прицел и атака<br>
+    <b>АТАКА справа</b> — держать, бить туда, где смотрит герой &nbsp; <b>ОБЫск</b> — держать у ящика<br>
+    <b>ИДТИ → ПРИСЕСТЬ → БЕЖАТЬ</b> — один цикл по кнопке &nbsp; <b>ХИЛ · ФОНАРЬ · ЗАРЯД · ЗВУК</b><br>
+    <b>1 · 2 · 3</b> — выбор оружия (пустая ячейка открывает рюкзак, чтобы его взять).
   </div>
   <button id="startBtn">ВОЙТИ В ЛЕС</button>
   <button id="contBtn" class="cont hidden">ПРОДОЛЖИТЬ</button>
@@ -338,14 +355,14 @@
   <div id="saveNote"></div>
 </div>
 
-<script src="js/hero_meta.js?v=26"></script>
-<script src="js/data.js?v=26"></script>
-<script src="js/audio.js?v=26"></script>
-<script src="js/world.js?v=26"></script>
-<script src="js/entities.js?v=26"></script>
-<script src="js/ui.js?v=26"></script>
-<script src="js/touch.js?v=26"></script>
-<script src="js/main.js?v=26"></script>
+<script src="js/hero_meta.js?v=27"></script>
+<script src="js/data.js?v=27"></script>
+<script src="js/audio.js?v=27"></script>
+<script src="js/world.js?v=27"></script>
+<script src="js/entities.js?v=27"></script>
+<script src="js/ui.js?v=27"></script>
+<script src="js/touch.js?v=27"></script>
+<script src="js/main.js?v=27"></script>
 </body>
 </html>
 

@@ -49,7 +49,7 @@ function initUI(){
   $('saveBtn').onclick=e=>{e.currentTarget.blur();saveGame();};
   $('loadBtn').onclick=e=>{e.currentTarget.blur();loadGame();};
   $('exitBtn').onclick=e=>{e.currentTarget.blur();exitToTitle();};
-  $('contBtn').onclick=e=>{e.currentTarget.blur();if(!loadGame())startGame();};
+  $('contBtn').onclick=e=>{e.currentTarget.blur();if(typeof ensureAudio==='function')ensureAudio();if(!loadGame())startGame();};
   if(UI.el.mm){
     UI.el.mm.width=MAPW*MM_S;UI.el.mm.height=MAPH*MM_S;
     UI.el.mmg=UI.el.mm.getContext('2d');UI.el.mmg.imageSmoothingEnabled=false;}
@@ -826,12 +826,13 @@ function renderHotbar(){
     const w=G.eq[k];
     if(w){d.appendChild(itemIcon(w,40));d.style.borderColor=RAR[ITEMS[w].r];
       d.onclick=()=>selectW(k);}
-    else d.style.borderColor='';
+    else{d.style.borderColor='';d.onclick=()=>{openInv();log('Ячейка '+pair[1]+' пуста: оружие нужно взять в рюкзаке.','a06a5a');};}
     const kl=document.createElement('span');kl.className='k';kl.textContent=pair[1];d.appendChild(kl);
     if(w&&ITEMS[w].t==='gun'){const a=document.createElement('span');a.className='amt';
       a.textContent=G.ws[k].mag+'/'+countItem(ITEMS[w].w.ammo);d.appendChild(a);}
     UI.el.hot.appendChild(d);
   }
+  if(typeof renderTouchWeapons==='function')renderTouchWeapons();
 }
 function selectW(k){if(G&&G.eq[k]){G.p.cur=k;G.p.reload=null;renderHotbar();}}
 

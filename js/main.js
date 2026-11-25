@@ -8,8 +8,10 @@ function boot(){
   loadHero();
   initUI();initInput();
   if(typeof touchInit==='function')touchInit();
+  addEventListener('pointerdown',()=>{if(typeof ensureAudio==='function')ensureAudio();},{once:true});
   $('startBtn').onclick=e=>{
     e.currentTarget.blur();
+    if(typeof ensureAudio==='function')ensureAudio();
     if(hasSave()&&!confirm('Начать заново? Прежнее сохранение не пропадёт, пока вы не сохранитесь в новой игре.'))return;
     startGame();
   };
@@ -307,9 +309,10 @@ function update(dt){
   if(k['KeyD']||k['ArrowRight'])dx++;
   const tv=touchVec();
   if(tv){dx=tv.x;dy=tv.y;}
+  if(TOUCH.on)p.crouch=(TOUCH.stance==='crouch');
   const moving=dx||dy;
   p.moving=!!moving;
-  const wantRun=((k['ShiftLeft']||k['ShiftRight'])||(tv&&TOUCH.run))&&p.stam>1&&moving&&!p.crouch;
+  const wantRun=((k['ShiftLeft']||k['ShiftRight'])||(TOUCH.on&&TOUCH.stance==='run')||(tv&&TOUCH.run))&&p.stam>1&&moving&&!p.crouch;
   p.run=wantRun;
   if(p.vigourT>0)p.vigourT=Math.max(0,p.vigourT-dt);
   const vMul=(p.vigourT>0&&G.upg)?BASE_UPG.tent[G.upg.tent].spd:1;

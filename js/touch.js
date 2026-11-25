@@ -1,7 +1,14 @@
 'use strict';
 /* ===== сенсорное управление: джойстик, кнопки, тап-прицел ===== */
-var TOUCH={on:false,touch:false,vx:0,vy:0,run:false,aim:null,aimT:0};
+var TOUCH={on:false,touch:false,vx:0,vy:0,run:false,aim:null,aimT:0,stance:'walk'};
 var _joyId=null,_joyCx=0,_joyCy=0,_aimId=null;
+
+/* звук: на телефоне AudioContext часто создаётся "в замороженном" состоянии —
+   разбудить его при первом касании */
+function ensureAudio(){
+  if(!SFX.ctx){try{sfxInit();}catch(e){}}
+  if(SFX.ctx&&SFX.ctx.state==='suspended'){try{SFX.ctx.resume();}catch(e){}}
+}
 
 function touchSupported(){
   if('ontouchstart' in window)return true;
@@ -50,6 +57,7 @@ function touchInit(){
   }
   joy.addEventListener('pointerdown',e=>{
     e.preventDefault();
+    ensureAudio();
     const r=joy.getBoundingClientRect();
     _joyCx=r.left+r.width/2;_joyCy=r.top+r.height/2;_joyId=e.pointerId;
     joyMove(e.clientX,e.clientY);
@@ -67,7 +75,7 @@ function touchInit(){
     fire.classList.toggle('down',on);
     if(G&&G.state==='play'&&!G.paused)G.mouse.down=on;
   };
-  fire.addEventListener('pointerdown',e=>{e.preventDefault();setFire(true);});
+  fire.addEventListener('pointerdown',e=>{e.preventDefault();ensureAudio();setFire(true);});
   fire.addEventListener('pointerup',()=>setFire(false));
   fire.addEventListener('pointercancel',()=>setFire(false));
   fire.addEventListener('mouseleave',()=>setFire(false));
@@ -117,14 +125,44 @@ function touchInit(){
   });
   tap('tbH',()=>{if(G&&!G.paused)quickHeal();});
   tap('tbF',()=>{if(G&&!G.paused)toggleFlash();});
-  tap('tbC',()=>{if(G&&!G.paused){G.p.crouch=!G.p.crouch;
-    log(G.p.crouch?'Крадёмся: тихо, но медленно.':'Идём обычным шагом.','8f8d7e');}});
+  /* Присесть → Идти → Бежать: один цикл по кнопке */
+  tap('tbC',()=>{
+    const order=['walk','crouch','run'];
+    TOUCH.stance=order[(order.indexOf(TOUCH.stance)+1)%3];
+    const b=$('tbC');
+    if(b)b.textContent={walk:'ИДТИ',crouch:'ПРИСЕСТЬ',run:'БЕЖАТЬ'}[TOUCH.stance];
+    if(G&&!G.paused){
+      G.p.crouch=(TOUCH.stance==='crouch');
+      log(TOUCH.stance==='crouch'?'Присели: тихо, медленно, почти не слышно.'
+          :(TOUCH.stance==='run'?'Бежим: быстро, шумно, выносливость тает.':'Идём обычным шагом.'),'8f8d7e');
+    }
+  });
   tap('tbR',()=>{if(G&&!G.paused)startReload();});
+  ['tbW1','tbW2','tbW3'].forEach((id,i)=>{
+    const b=$(id);if(!b)return;
+    b.addEventListener('pointerdown',e=>{
+      e.preventDefault();b.classList.add('down');
+      if(!G)return;
+      const k=['blade','gunA','gunB'][i];
+      if(G.eq[k]){selectW(k);}
+      else{openInv();log('Ячейка '+(i+1)+' пуста: возьмите оружие в рюкзаке.','a06a5a');}
+    });
+    b.addEventListener('pointerup',()=>b.classList.remove('down'));
+    b.addEventListener('pointercancel',()=>b.classList.remove('down'));
+  });
+  tap('tbSnd',()=>{
+    if(!SFX.toggleMute)return;
+    ensureAudio();
+    const on=SFX.toggleMute();
+    const b=$('tbSnd');if(b)b.textContent=on?'ЗВУК':'ТИШЕ';
+    log(on?'Звук и музыка включены.':'Звук и музыка отключены.','8f8d7e');
+  });
   tap('tbBag',()=>{if(!G)return;
     if(G.ui.menu)closeMenu();else if(G.ui.panel)closePanel();else openInv();});
   tap('tbMenu',()=>{if(!G)return;
     if(G.ui.panel)closePanel();else if(G.ui.menu)closeMenu();else openMenu();});
 
+  renderTouchWeapons();
   syncTouchUI();
   if(TOUCH.on)log('Сенсорное управление: слева — джойстик (до упора — бег), справа — кнопки. Тап по экрану — прицел и атака.','8aa06b');
 }
@@ -133,6 +171,27 @@ function syncTouchUI(){
   const ui=$('touchUI');if(!ui)return;
   const vis=TOUCH.on&&G&&G.state==='play'&&!(G.ui&&(G.ui.panel||G.ui.menu));
   ui.classList.toggle('hidden',!vis);
+  document.body.classList.toggle('touchui',!!(TOUCH.on&&G&&G.state==='play'));
+}
+
+/* сенсорный выбор оружия 1·2·3 (над хотбаром) */
+function renderTouchWeapons(){
+  if(!TOUCH.on)return;
+  const keys=['blade','gunA','gunB'];
+  keys.forEach((k,i)=>{
+    const b=$('tbW'+(i+1));if(!b)return;
+    const w=G&&G.eq[k];
+    b.classList.toggle('off',!w);
+    b.classList.toggle('sel',!!G&&G.p.cur===k);
+    b.innerHTML='<span class="wn">'+(i+1)+'</span>';
+    if(w){
+      try{b.appendChild(itemIcon(w,24));}catch(e){}
+      if(ITEMS[w].t==='gun'){
+        const a=document.createElement('span');a.className='wa';a.textContent=G.ws[k].mag;
+        b.appendChild(a);
+      }
+    }
+  });
 }
 
 /* вектор движения с джойстика: {x,y} или null */
