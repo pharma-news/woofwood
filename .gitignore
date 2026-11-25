@@ -1,0 +1,7 @@
+# локальные артефакты, не для репозитория
+*.png
+*.jpeg
+*.jpg
+.playwright-mcp/
+.DS_Store
+Thumbs.db
